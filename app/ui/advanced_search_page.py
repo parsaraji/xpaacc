@@ -12,6 +12,7 @@ class AdvancedSearchPage(QWidget):
     def __init__(self, main_window=None):
         super().__init__()
         self.main_window = main_window
+        self.setStyleSheet("background-color: #ffffff;")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -19,11 +20,11 @@ class AdvancedSearchPage(QWidget):
 
         title = QLabel("جستجوی پیشرفته اسناد، بیماران و سوابق آزمایشگاهی")
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
+        title.setStyleSheet("color: #a62626; border: none;")
         layout.addWidget(title)
 
-        # Filters Card
         filter_card = QFrame()
-        filter_card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
+        filter_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;")
         filter_layout = QFormLayout(filter_card)
         filter_layout.setContentsMargins(15, 15, 15, 15)
 
@@ -42,19 +43,18 @@ class AdvancedSearchPage(QWidget):
 
         btn_layout = QHBoxLayout()
         search_btn = QPushButton("شروع جستجوی پیشرفته")
-        search_btn.setStyleSheet("background-color: #319795; color: white; padding: 8px 16px; font-weight: bold;")
+        search_btn.setStyleSheet("background-color: #a62626; color: white; padding: 8px 16px; font-weight: bold;")
         search_btn.clicked.connect(self.run_search)
         btn_layout.addWidget(search_btn)
 
         filter_layout.addRow("", btn_layout)
         layout.addWidget(filter_card)
 
-        # Search Results Table
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["شماره گزارش", "نام بیمار / مشتری", "شناسه نمونه", "تاریخ ثبت", "وضعیت"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748;")
+        self.table.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0;")
         layout.addWidget(self.table)
 
     def run_search(self):
@@ -71,9 +71,10 @@ class AdvancedSearchPage(QWidget):
                 query = query.filter(LaboratoryReport.sample_id.like(f"%{s_id}%"))
 
             if t_name:
-                query = query.join(LaboratoryTestResult).filter(LaboratoryTestResult.test_name.like(f"%{t_name}%"))
+                # Explicit clean join on results relationship
+                query = query.join(LaboratoryReport.results).filter(LaboratoryTestResult.test_name.like(f"%{t_name}%"))
 
-            results = query.order_by(LaboratoryReport.id.desc()).all()
+            results = query.distinct().order_by(LaboratoryReport.id.desc()).all()
             self.table.setRowCount(len(results))
 
             for idx, r in enumerate(results):

@@ -13,7 +13,7 @@ class EditReportDialog(QDialog):
         super().__init__(parent)
         self.report_id = report_id
         self.setWindowTitle("ویرایش دستی گزارش آزمایشگاهی")
-        self.setMinimumSize(500, 400)
+        self.setMinimumSize(850, 650) # Extremely large, spacious and highly readable popup
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
         layout = QVBoxLayout(self)

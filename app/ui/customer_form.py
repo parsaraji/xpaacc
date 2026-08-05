@@ -14,9 +14,12 @@ class CustomerForm(QWidget):
         super().__init__()
         self.main_window = main_window
 
+        # 100% Light background scroll area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("background-color: #ffffff; border: none;")
         self.scroll_widget = QWidget()
+        self.scroll_widget.setStyleSheet("background-color: #ffffff;")
         scroll.setWidget(self.scroll_widget)
 
         main_layout = QVBoxLayout(self)
@@ -29,10 +32,11 @@ class CustomerForm(QWidget):
 
         title = QLabel("ثبت و افزودن مشتری جدید")
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
+        title.setStyleSheet("color: #a62626; border: none;")
         layout.addWidget(title)
 
         card = QFrame()
-        card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
+        card.setStyleSheet("background-color: #f7f7f7; border: 1px solid #e0e0e0; border-radius: 8px;")
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(15, 15, 15, 15)
 
@@ -82,12 +86,12 @@ class CustomerForm(QWidget):
         btn_layout = QHBoxLayout()
         save_btn = QPushButton("ذخیره مشتری")
         save_btn.setFont(QFont(FONT_NAME, 11, QFont.Bold))
-        save_btn.setStyleSheet("background-color: #319795; color: white; padding: 10px 24px; border-radius: 4px;")
+        save_btn.setStyleSheet("background-color: #a62626; color: white; padding: 10px 24px; border-radius: 4px;")
         save_btn.clicked.connect(self.save_customer)
         btn_layout.addWidget(save_btn)
 
         clear_btn = QPushButton("پاک کردن فرم")
-        clear_btn.setStyleSheet("background-color: #4a5568; color: white; padding: 10px 18px; border-radius: 4px;")
+        clear_btn.setStyleSheet("background-color: #f3f3f3; color: #4b5563; border: 1px solid #e0e0e0; padding: 10px 18px; border-radius: 4px;")
         clear_btn.clicked.connect(self.clear_form)
         btn_layout.addWidget(clear_btn)
 

@@ -14,47 +14,52 @@ class DocumentImportPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(20)
+        self.setStyleSheet("background-color: #ffffff;")
 
         title = QLabel("ورود و پردازش فایل‌های آزمایشگاهی جدید (XPS/OXPS/PDF)")
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
+        title.setStyleSheet("color: #a62626;")
         layout.addWidget(title)
 
-        self.drop_zone = QFrame()
-        self.drop_zone.setMinimumHeight(350)
-        self.drop_zone.setStyleSheet("""
+        # Upload card area
+        self.upload_card = QFrame()
+        self.upload_card.setMinimumHeight(350)
+        self.upload_card.setStyleSheet("""
             QFrame {
-                background-color: #1a202c;
-                border: 2px dashed #4a5568;
+                background-color: #ffffff;
+                border: 2px dashed #cccccc;
                 border-radius: 12px;
-            }
-            QFrame:hover {
-                border-color: #319795;
-                background-color: #1e2630;
             }
         """)
 
-        drop_layout = QVBoxLayout(self.drop_zone)
+        drop_layout = QVBoxLayout(self.upload_card)
         drop_layout.setAlignment(Qt.AlignCenter)
         drop_layout.setSpacing(15)
 
-        info_lbl = QLabel("فایل گزارش آزمایشگاه را به این بخش بکشید و رها کنید\nیا روی دکمه زیر جهت انتخاب فایل کلیک کنید")
+        info_lbl = QLabel("جهت بارگذاری و استخراج هوشمند اطلاعات آزمایش، فایل خود را انتخاب نمایید")
         info_lbl.setFont(QFont(FONT_NAME, 12))
         info_lbl.setAlignment(Qt.AlignCenter)
-        info_lbl.setStyleSheet("color: #a0aec0; line-height: 1.6;")
+        info_lbl.setStyleSheet("color: #4b5563; border: none;")
         drop_layout.addWidget(info_lbl)
 
         select_btn = QPushButton("انتخاب فایل گزارش...")
         select_btn.setFont(QFont(FONT_NAME, 11, QFont.Bold))
         select_btn.setStyleSheet("""
-            background-color: #319795;
-            color: white;
-            padding: 10px 24px;
-            border-radius: 6px;
+            QPushButton {
+                background-color: #a62626;
+                color: white;
+                padding: 10px 24px;
+                border-radius: 6px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #8a1d1d;
+            }
         """)
         select_btn.clicked.connect(self.choose_file)
         drop_layout.addWidget(select_btn)
 
-        layout.addWidget(self.drop_zone)
+        layout.addWidget(self.upload_card)
         layout.addStretch()
 
     def choose_file(self):

@@ -17,6 +17,7 @@ from app.ui.document_viewer import DocumentViewer
 from app.ui.extraction_review import ExtractionReview
 from app.ui.reports_page import ReportsPage
 from app.ui.transactions_page import TransactionsPage
+from app.ui.customer_ledger_page import CustomerLedgerPage
 from app.ui.backup_page import BackupPage
 from app.ui.settings_page import SettingsPage
 from app.ui.about_page import AboutPage
@@ -32,7 +33,7 @@ class MainWindow(QMainWindow):
         # Apply Central Application Font & RTL Styling
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
-        # Premium High-Contrast Light Divar-style Palette - 100% BLACK FREE
+        # Global Microsoft Premium Clean Light Stylesheet - 100% BLACK FREE
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #ffffff; /* Pure white background */
@@ -147,8 +148,8 @@ class MainWindow(QMainWindow):
             "افزودن مشتری",              # 2
             "گزارش‌های آزمایشگاهی",       # 3
             "ورود فایل XPS",            # 4
-            "حساب مشتریان",              # 5
-            "دریافت‌ها و پرداخت‌ها",       # 6
+            "حساب مشتریان",              # 5 -> CustomerLedgerPage (Independent)
+            "دریافت‌ها و پرداخت‌ها",       # 6 -> TransactionsPage (Independent)
             "مدیریت قیمت آزمایشگاهی",     # 7
             "جستجوی پیشرفته",            # 8
             "پشتیبان‌گیری",              # 9
@@ -184,7 +185,8 @@ class MainWindow(QMainWindow):
         self.customer_form_page = CustomerForm(self)           # 2
         self.reports_page = ReportsPage(self)                 # 3
         self.document_import_page = DocumentImportPage(self)   # 4
-        self.transactions_page = TransactionsPage(self)       # 5 & 6
+        self.ledger_page = CustomerLedgerPage(self)           # 5 (Independent Page!)
+        self.transactions_page = TransactionsPage(self)       # 6 (Independent Page!)
         self.catalog_page = CatalogPage(self)                 # 7
         self.search_page = AdvancedSearchPage(self)           # 8
         self.backup_page = BackupPage(self)                   # 9
@@ -202,16 +204,17 @@ class MainWindow(QMainWindow):
         self.pages_container.addWidget(self.customer_form_page)     # 2
         self.pages_container.addWidget(self.reports_page)           # 3
         self.pages_container.addWidget(self.document_import_page)   # 4
-        self.pages_container.addWidget(self.transactions_page)     # 5
-        self.pages_container.addWidget(self.catalog_page)          # 6
-        self.pages_container.addWidget(self.search_page)            # 7
-        self.pages_container.addWidget(self.backup_page)            # 8
-        self.pages_container.addWidget(self.settings_page)          # 9
-        self.pages_container.addWidget(self.about_page)             # 10
-        self.pages_container.addWidget(self.customer_profile_page)  # 11
-        self.pages_container.addWidget(self.customer_statement_page)# 12
-        self.pages_container.addWidget(self.document_viewer_page)  # 13
-        self.pages_container.addWidget(self.extraction_review_page)# 14
+        self.pages_container.addWidget(self.ledger_page)           # 5
+        self.pages_container.addWidget(self.transactions_page)     # 6
+        self.pages_container.addWidget(self.catalog_page)          # 7
+        self.pages_container.addWidget(self.search_page)            # 8
+        self.pages_container.addWidget(self.backup_page)            # 9
+        self.pages_container.addWidget(self.settings_page)          # 10
+        self.pages_container.addWidget(self.about_page)             # 11
+        self.pages_container.addWidget(self.customer_profile_page)  # 12
+        self.pages_container.addWidget(self.customer_statement_page)# 13
+        self.pages_container.addWidget(self.document_viewer_page)  # 14
+        self.pages_container.addWidget(self.extraction_review_page)# 15
 
         # Clean routing map
         self.page_mapping = {
@@ -220,7 +223,7 @@ class MainWindow(QMainWindow):
             2: self.customer_form_page,
             3: self.reports_page,
             4: self.document_import_page,
-            5: self.transactions_page,
+            5: self.ledger_page,
             6: self.transactions_page,
             7: self.catalog_page,
             8: self.search_page,
@@ -245,11 +248,13 @@ class MainWindow(QMainWindow):
             self.dashboard_page.populate_recent_transactions()
         elif index == 3:
             self.reports_page.load_reports()
-        elif index == 7:
-            self.catalog_page.load_catalog()
-        elif index in [5, 6]:
+        elif index == 5:
+            self.ledger_page.load_ledgers()
+        elif index == 6:
             self.transactions_page.load_customers_combo()
             self.transactions_page.load_transactions()
+        elif index == 7:
+            self.catalog_page.load_catalog()
 
     def navigate_to_page(self, index: int):
         if index < len(self.menu_items):
@@ -262,12 +267,14 @@ class MainWindow(QMainWindow):
             self.customers_page.load_customers()
         elif index == 3:
             self.reports_page.load_reports()
+        elif index == 5:
+            self.ledger_page.load_ledgers()
         elif index == 7:
             self.catalog_page.load_catalog()
         elif index == 12:
             self.customer_profile_page.load_profile_data()
         elif index == 13:
             self.customer_statement_page.load_statement()
-        elif index in [5, 6]:
+        elif index == 6:
             self.transactions_page.load_customers_combo()
             self.transactions_page.load_transactions()

@@ -20,13 +20,14 @@ class TransactionsPage(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
 
-        title = QLabel("دریافت‌ها، پرداخت‌ها و تراکنش‌های مالی")
+        title = QLabel("دریافت‌ها و پرداخت‌های صندوق مالی")
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
+        title.setStyleSheet("color: #a62626;")
         layout.addWidget(title)
 
-        # Form to add custom debit/credit
+        # Form Card
         form_card = QFrame()
-        form_card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
+        form_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;")
         form_layout = QHBoxLayout(form_card)
         form_layout.setContentsMargins(15, 15, 15, 15)
 
@@ -35,37 +36,37 @@ class TransactionsPage(QWidget):
         self.load_customers_combo()
 
         self.type_combo = QComboBox()
-        self.type_combo.addItems(["Customer payment received", "Debit transaction", "Credit transaction", "Discount"])
+        self.type_combo.addItems(["دریافت از مشتری", "پرداخت به مشتری", "تخفیف", "تعدیل حساب"])
 
         self.amount_input = QLineEdit()
         self.amount_input.setPlaceholderText("مبلغ به تومان")
 
         self.desc_input = QLineEdit()
-        self.desc_input.setPlaceholderText("توضیحات تراکنش")
+        self.desc_input.setPlaceholderText("بابت...")
 
         inner_form.addRow("انتخاب مشتری:", self.cust_combo)
         inner_form.addRow("نوع تراکنش:", self.type_combo)
-        inner_form.addRow("مبلغ تراکنش:", self.amount_input)
-        inner_form.addRow("شرح بابت:", self.desc_input)
+        inner_form.addRow("مبلغ تراکنش (تومان):", self.amount_input)
+        inner_form.addRow("شرح سند بابت:", self.desc_input)
         form_layout.addLayout(inner_form)
 
-        submit_btn = QPushButton("ثبت تراکنش مالی")
-        submit_btn.setStyleSheet("background-color: #319795; color: white; padding: 12px 20px; font-weight: bold;")
+        submit_btn = QPushButton("ثبت سند مالی")
+        submit_btn.setStyleSheet("background-color: #a62626; color: white; padding: 12px 20px; font-weight: bold;")
         submit_btn.clicked.connect(self.save_transaction)
         form_layout.addWidget(submit_btn)
 
         layout.addWidget(form_card)
 
         # Transactions List
-        list_title = QLabel("لیست آخرین تراکنش‌های ثبت شده در سیستم")
+        list_title = QLabel("لیست آخرین اسناد و تراکنش‌های ثبت شده")
         list_title.setFont(QFont(FONT_NAME, 11, QFont.Bold))
         layout.addWidget(list_title)
 
         self.table = QTableWidget()
         self.table.setColumnCount(6)
-        self.table.setHorizontalHeaderLabels(["شماره سند", "نام مشتری", "نوع تراکنش", "بدهکار", "بستانکار", "تاریخ ثبت"])
+        self.table.setHorizontalHeaderLabels(["شماره سند", "نام مشتری", "نوع تراکنش", "بدهکار (تومان)", "بستانکار (تومان)", "تاریخ ثبت"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748;")
+        self.table.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0;")
         layout.addWidget(self.table)
 
         self.load_transactions()
@@ -85,7 +86,21 @@ class TransactionsPage(QWidget):
             for idx, tx in enumerate(txs):
                 self.table.setItem(idx, 0, QTableWidgetItem(tx.transaction_number))
                 self.table.setItem(idx, 1, QTableWidgetItem(tx.customer.display_name if tx.customer else "---"))
-                self.table.setItem(idx, 2, QTableWidgetItem(tx.transaction_type))
+
+                # Dynamic Persian translation mapping of transaction types
+                type_persian = tx.transaction_type
+                if type_persian == "Opening balance":
+                    type_persian = "مانده حساب اولیه"
+                elif type_persian == "Sales invoice":
+                    type_persian = "فاکتور فروش"
+                elif type_persian == "Customer payment received":
+                    type_persian = "دریافت از مشتری"
+                elif type_persian == "Reversal":
+                    type_persian = "سند برگشتی"
+                elif type_persian == "Laboratory service charge":
+                    type_persian = "هزینه خدمات آزمایشگاهی"
+
+                self.table.setItem(idx, 2, QTableWidgetItem(type_persian))
                 self.table.setItem(idx, 3, QTableWidgetItem(f"{tx.debit_amount or 0:,.0f}"))
                 self.table.setItem(idx, 4, QTableWidgetItem(f"{tx.credit_amount or 0:,.0f}"))
                 self.table.setItem(idx, 5, QTableWidgetItem(tx.transaction_date.strftime("%Y/%m/%d %H:%M:%S") if tx.transaction_date else ""))
@@ -106,26 +121,36 @@ class TransactionsPage(QWidget):
             QMessageBox.warning(self, "خطا", "مبلغ باید بزرگتر از صفر باشد.")
             return
 
-        tx_type = self.type_combo.currentText()
+        tx_type_persian = self.type_combo.currentText()
         deb = Decimal("0.00")
         cred = Decimal("0.00")
 
-        if tx_type in ["Debit transaction"]:
-            deb = amt
-        else:
+        # Translate form UI select items to database matching logic
+        db_type = "Debit transaction"
+        if tx_type_persian == "دریافت از مشتری":
+            db_type = "Customer payment received"
             cred = amt
+        elif tx_type_persian == "پرداخت به مشتری":
+            db_type = "Payment made to customer"
+            deb = amt
+        elif tx_type_persian == "تخفیف":
+            db_type = "Discount"
+            cred = amt
+        else:
+            db_type = "Adjustment"
+            deb = amt
 
         with get_db_session() as s:
             service = AccountingService(s)
             try:
                 service.post_transaction(
                     customer_id=cust_id,
-                    transaction_type=tx_type,
+                    transaction_type=db_type,
                     debit_amount=deb,
                     credit_amount=cred,
-                    description=self.desc_input.text().strip() or f"ثبت دستی {tx_type}"
+                    description=self.desc_input.text().strip() or f"ثبت دستی {tx_type_persian}"
                 )
-                QMessageBox.information(self, "موفقیت", "تراکنش مالی با موفقیت ثبت شد.")
+                QMessageBox.information(self, "موفقیت", "سند مالی دریافت/پرداخت با موفقیت ثبت و به صندوق اعمال گردید.")
                 self.amount_input.clear()
                 self.desc_input.clear()
                 self.load_transactions()

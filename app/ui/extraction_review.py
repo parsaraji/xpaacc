@@ -23,6 +23,7 @@ class ExtractionReview(QWidget):
         self.main_window = main_window
         self.extracted_data = {}
         self.total_estimated_fee = Decimal("0.00")
+        self.setStyleSheet("background-color: #ffffff;")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -30,6 +31,7 @@ class ExtractionReview(QWidget):
 
         title = QLabel("بازبینی و تایید اطلاعات استخراج شده")
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
+        title.setStyleSheet("color: #a62626;")
         layout.addWidget(title)
 
         # Metrics Panel
@@ -43,18 +45,17 @@ class ExtractionReview(QWidget):
 
         self.fee_lbl = QLabel("جمع هزینه خدمات: ۰ تومان")
         self.fee_lbl.setFont(QFont(FONT_NAME, 11, QFont.Bold))
-        self.fee_lbl.setStyleSheet("color: #0284c7;")
+        self.fee_lbl.setStyleSheet("color: #a62626;")
         metrics_layout.addWidget(self.fee_lbl)
 
         layout.addLayout(metrics_layout)
 
         # 1. Patient form metadata card
         meta_card = QFrame()
-        meta_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;")
+        meta_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;")
         meta_layout = QFormLayout(meta_card)
         meta_layout.setContentsMargins(15, 15, 15, 15)
 
-        # Customer Assignment Dropdown
         self.customer_combo = QComboBox()
         self.load_customers_dropdown()
 
@@ -73,11 +74,12 @@ class ExtractionReview(QWidget):
 
         # 2. Results table card
         table_card = QFrame()
-        table_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;")
+        table_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;")
         tc_layout = QVBoxLayout(table_card)
 
         table_title = QLabel("جدول نتایج آزمایشگاهی ردیابی شده و تعرفه خدمات")
         table_title.setFont(QFont(FONT_NAME, 12, QFont.Bold))
+        table_title.setStyleSheet("color: #a62626;")
         tc_layout.addWidget(table_title)
 
         self.table = QTableWidget()
@@ -93,11 +95,12 @@ class ExtractionReview(QWidget):
         act_layout = QHBoxLayout()
         confirm_btn = QPushButton("تایید و ثبت نهایی در پرونده و صدور فاکتور")
         confirm_btn.setFont(QFont(FONT_NAME, 11, QFont.Bold))
-        confirm_btn.setStyleSheet("background-color: #0284c7; color: white; padding: 10px 24px; border-radius: 4px;")
+        confirm_btn.setStyleSheet("background-color: #a62626; color: white; padding: 10px 24px; border-radius: 4px;")
         confirm_btn.clicked.connect(self.confirm_and_save)
         act_layout.addWidget(confirm_btn)
 
         cancel_btn = QPushButton("انصراف")
+        cancel_btn.setStyleSheet("background-color: #f3f3f3; color: #4b5563; border: 1px solid #e0e0e0; padding: 10px 18px;")
         cancel_btn.clicked.connect(self.cancel_review)
         act_layout.addWidget(cancel_btn)
 
@@ -120,9 +123,9 @@ class ExtractionReview(QWidget):
         if score > 80:
             self.conf_lbl.setStyleSheet("color: #38a169; font-weight: bold;")
         elif score > 50:
-            self.conf_lbl.setStyleSheet("color: #dd6b20; font-weight: bold;")
+            self.conf_lbl.setStyleSheet("color: #f59e0b; font-weight: bold;")
         else:
-            self.conf_lbl.setStyleSheet("color: #e53e3e; font-weight: bold;")
+            self.conf_lbl.setStyleSheet("color: #ef4444; font-weight: bold;")
 
         self.patient_input.setText(data.get("patient_name", ""))
         self.sample_id_input.setText(data.get("sample_id", ""))
@@ -196,7 +199,6 @@ class ExtractionReview(QWidget):
 
                 report = report_service.register_report(rep_data)
 
-                # Save structured results
                 for tr in self.extracted_data["tests"]:
                     db_tr = LaboratoryTestResult(
                         report_id=report.id,
@@ -208,7 +210,6 @@ class ExtractionReview(QWidget):
                     s.add(db_tr)
                 s.flush()
 
-                # Issue invoice charge on customer
                 if self.total_estimated_fee > 0:
                     accounting_service = AccountingService(s)
                     accounting_service.post_transaction(

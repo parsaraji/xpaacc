@@ -14,22 +14,22 @@ class CatalogPage(QWidget):
     def __init__(self, main_window=None):
         super().__init__()
         self.main_window = main_window
+        self.setStyleSheet("background-color: #ffffff;")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
 
-        # Title block
         header = QHBoxLayout()
         title = QLabel("مدیریت تعرفه و کاتالوگ تست‌های آزمایشگاهی")
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
+        title.setStyleSheet("color: #a62626; border: none;")
         header.addWidget(title)
         header.addStretch()
         layout.addLayout(header)
 
-        # Add/Edit Item Form Card
         form_card = QFrame()
-        form_card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
+        form_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;")
         form_layout = QHBoxLayout(form_card)
         form_layout.setContentsMargins(15, 15, 15, 15)
 
@@ -57,18 +57,17 @@ class CatalogPage(QWidget):
         form_layout.addLayout(inner_form)
 
         add_btn = QPushButton("ثبت تست در کاتالوگ")
-        add_btn.setStyleSheet("background-color: #319795; color: white; padding: 12px 20px; font-weight: bold;")
+        add_btn.setStyleSheet("background-color: #a62626; color: white; padding: 12px 20px; font-weight: bold;")
         add_btn.clicked.connect(self.save_test_item)
         form_layout.addWidget(add_btn)
 
         layout.addWidget(form_card)
 
-        # Catalog Grid Table
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["کد تست", "نام تست", "واحد سنجش", "محدوده مرجع", "تعرفه (تومان)"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748;")
+        self.table.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0;")
         layout.addWidget(self.table)
 
         self.load_catalog()
