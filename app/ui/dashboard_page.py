@@ -22,7 +22,7 @@ class DashboardPage(QWidget):
         header_layout = QHBoxLayout()
         title_lbl = QLabel("میز کار و داشبورد مدیریتی")
         title_lbl.setFont(QFont(FONT_NAME, 16, QFont.Bold))
-        title_lbl.setStyleSheet("color: #1f2937;")
+        title_lbl.setStyleSheet("color: #a62626;") # Warm Divar Red Header
         header_layout.addWidget(title_lbl)
         header_layout.addStretch()
         layout.addLayout(header_layout)
@@ -37,20 +37,20 @@ class DashboardPage(QWidget):
         bottom_layout.setSpacing(20)
 
         recent_panel = QFrame()
-        recent_panel.setStyleSheet("background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;")
+        recent_panel.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;")
         recent_layout = QVBoxLayout(recent_panel)
         recent_layout.setContentsMargins(15, 15, 15, 15)
 
         recent_title = QLabel("تراکنش‌های مالی اخیر")
         recent_title.setFont(QFont(FONT_NAME, 12, QFont.Bold))
-        recent_title.setStyleSheet("color: #1f2937; margin-bottom: 10px;")
+        recent_title.setStyleSheet("color: #2b2b2b; margin-bottom: 10px;")
         recent_layout.addWidget(recent_title)
 
         self.recent_table = QTableWidget()
         self.recent_table.setColumnCount(4)
         self.recent_table.setHorizontalHeaderLabels(["مشتری", "نوع", "بدهکار", "بستانکار"])
         self.recent_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.recent_table.setStyleSheet("background-color: #ffffff; border: none; gridline-color: #e5e7eb;")
+        self.recent_table.setStyleSheet("background-color: #ffffff; border: none; gridline-color: #e0e0e0;")
         self.recent_table.setRowCount(5)
         self.populate_recent_transactions()
 
@@ -59,14 +59,14 @@ class DashboardPage(QWidget):
 
         quick_panel = QFrame()
         quick_panel.setFixedWidth(280)
-        quick_panel.setStyleSheet("background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;")
+        quick_panel.setStyleSheet("background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;")
         quick_layout = QVBoxLayout(quick_panel)
         quick_layout.setContentsMargins(15, 15, 15, 15)
         quick_layout.setSpacing(12)
 
         quick_title = QLabel("دسترسی سریع")
         quick_title.setFont(QFont(FONT_NAME, 12, QFont.Bold))
-        quick_title.setStyleSheet("color: #0284c7;")
+        quick_title.setStyleSheet("color: #a62626;")
         quick_layout.addWidget(quick_title)
 
         actions = [
@@ -83,17 +83,17 @@ class DashboardPage(QWidget):
             btn.setMinimumHeight(42)
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #f9fafb;
-                    border: 1px solid #e5e7eb;
+                    background-color: #ffffff;
+                    border: 1px solid #e0e0e0;
                     border-radius: 6px;
                     color: #4b5563;
                     text-align: right;
                     padding-right: 15px;
                 }
                 QPushButton:hover {
-                    background-color: #f3f4f6;
-                    border-color: #0284c7;
-                    color: #0284c7;
+                    background-color: #f7f7f7;
+                    border-color: #a62626;
+                    color: #a62626;
                 }
             """)
             btn.clicked.connect(lambda checked=False, index=idx: self.main_window.navigate_to_page(index))
@@ -121,9 +121,9 @@ class DashboardPage(QWidget):
                 elif bal < 0:
                     tot_credit += abs(bal)
 
-        self.create_metric_card(0, 0, "تعداد کل مشتریان", str(tot_custs), "#0284c7")
-        self.create_metric_card(0, 1, "تعداد گزارش‌های ثبت‌شده", str(tot_reports), "#0284c7")
-        self.create_metric_card(0, 2, "گزارش‌های جدید امروز", "۲", "#0284c7")
+        self.create_metric_card(0, 0, "تعداد کل مشتریان", str(tot_custs), "#a62626")
+        self.create_metric_card(0, 1, "تعداد گزارش‌های ثبت‌شده", str(tot_reports), "#a62626")
+        self.create_metric_card(0, 2, "گزارش‌های جدید امروز", "۲", "#a62626")
         self.create_metric_card(1, 0, "مانده کل بدهکاران", f"{tot_debit:,.0f} تومان", "#ef4444")
         self.create_metric_card(1, 1, "مانده کل بستانکاران", f"{tot_credit:,.0f} تومان", "#10b981")
         self.create_metric_card(1, 2, "اسناد نیازمند بررسی", "۰", "#f59e0b")
@@ -133,7 +133,7 @@ class DashboardPage(QWidget):
         card.setMinimumHeight(100)
         card.setStyleSheet(f"""
             background-color: #ffffff;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #e0e0e0;
             border-left: 5px solid {accent_color};
             border-radius: 6px;
         """)
