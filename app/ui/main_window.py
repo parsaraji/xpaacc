@@ -32,10 +32,10 @@ class MainWindow(QMainWindow):
         # Apply Central Application Font & RTL Styling
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
-        # Global Microsoft Premium Clean Light Stylesheet
+        # Global Microsoft Premium Clean Light Stylesheet - 100% BLACK FREE
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #f3f4f6; /* Premium Ivory/Light Gray background */
+                background-color: #f9fafb; /* Light Ivory/Gray background */
             }
             QWidget {
                 color: #1f2937; /* Clean Charcoal/Dark Gray Text */
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
                 color: #1f2937;
             }
             QHeaderView::section {
-                background-color: #f9fafb;
+                background-color: #f3f4f6;
                 color: #374151;
                 padding: 8px;
                 font-weight: bold;
@@ -100,6 +100,15 @@ class MainWindow(QMainWindow):
             }
             QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
                 border: 1px solid #0284c7;
+            }
+            QFrame {
+                background-color: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+            }
+            QLabel {
+                border: none;
+                background-color: transparent;
             }
         """)
 
@@ -125,7 +134,7 @@ class MainWindow(QMainWindow):
         brand_label.setFont(QFont(FONT_NAME, 13, QFont.Bold))
         brand_label.setWordWrap(True)
         brand_label.setAlignment(Qt.AlignCenter)
-        brand_label.setStyleSheet("color: #0284c7; margin-bottom: 20px; line-height: 1.4;")
+        brand_label.setStyleSheet("color: #0284c7; margin-bottom: 20px; line-height: 1.4; border: none;")
         sidebar_layout.addWidget(brand_label)
 
         # Navigation Menu List
@@ -159,7 +168,7 @@ class MainWindow(QMainWindow):
         # Footer branding
         footer_brand = QLabel("طراحی شده برای ویندوز")
         footer_brand.setFont(QFont(FONT_NAME, 10))
-        footer_brand.setStyleSheet("color: #9ca3af;")
+        footer_brand.setStyleSheet("color: #9ca3af; border: none;")
         footer_brand.setAlignment(Qt.AlignCenter)
         sidebar_layout.addWidget(footer_brand)
 
