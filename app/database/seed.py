@@ -7,11 +7,28 @@ from app.models.invoice import Invoice, InvoiceItem
 from app.models.laboratory_report import LaboratoryReport
 from app.models.laboratory_test import LaboratoryTestResult
 from app.models.extraction_template import ExtractionTemplate
+from app.models.lab_test_catalog import LabTestCatalog
 
 def seed_initial_data():
     with get_db_session() as session:
         if session.query(Customer).count() > 0:
             return
+
+        # Seed Lab Test Catalog (Thyroid Hormones, Liver Enzymes, CBC)
+        tests_catalog = [
+            LabTestCatalog(test_code="T3", full_name="Triiodothyronine", default_unit="ng/mL", reference_range="0.8 - 2.0", default_fee=Decimal("85000.00"), category="Thyroid"),
+            LabTestCatalog(test_code="T4", full_name="Thyroxine", default_unit="ug/dL", reference_range="4.5 - 12.0", default_fee=Decimal("95000.00"), category="Thyroid"),
+            LabTestCatalog(test_code="TSH", full_name="Thyroid Stimulating Hormone", default_unit="uIU/mL", reference_range="0.4 - 4.0", default_fee=Decimal("110000.00"), category="Thyroid"),
+            LabTestCatalog(test_code="SGPT", full_name="Alanine Aminotransferase", default_unit="U/L", reference_range="0 - 45", default_fee=Decimal("45000.00"), category="Liver Enzymes"),
+            LabTestCatalog(test_code="SGOT", full_name="Aspartate Aminotransferase", default_unit="U/L", reference_range="0 - 40", default_fee=Decimal("45000.00"), category="Liver Enzymes"),
+            LabTestCatalog(test_code="ALP", full_name="Alkaline Phosphatase", default_unit="U/L", reference_range="30 - 120", default_fee=Decimal("50000.00"), category="Liver Enzymes"),
+            LabTestCatalog(test_code="Hemoglobin", full_name="Hemoglobin", default_unit="g/dL", reference_range="12.0 - 16.0", default_fee=Decimal("35000.00"), category="Hematology"),
+            LabTestCatalog(test_code="WBC", full_name="White Blood Cells", default_unit="10^3/uL", reference_range="4.0 - 11.0", default_fee=Decimal("35000.00"), category="Hematology"),
+            LabTestCatalog(test_code="Urea", full_name="Blood Urea Nitrogen", default_unit="mg/dL", reference_range="7 - 20", default_fee=Decimal("40000.00"), category="Kidney")
+        ]
+        for t in tests_catalog:
+            session.add(t)
+        session.flush()
 
         template = ExtractionTemplate(
             name="قالب آزمایشگاه پیش‌فرض",

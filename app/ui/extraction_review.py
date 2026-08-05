@@ -8,9 +8,12 @@ from app.config import FONT_NAME
 from app.database.session import get_db_session
 from app.services.report_service import ReportService
 from app.services.customer_service import CustomerService
+from app.services.accounting_service import AccountingService
 from app.models.laboratory_report import LaboratoryReport
 from app.models.laboratory_test import LaboratoryTestResult
+from app.models.lab_test_catalog import LabTestCatalog
 from app.document_processing.confidence import ConfidenceCalculator
+from decimal import Decimal
 import os
 
 class ExtractionReview(QWidget):
@@ -18,6 +21,7 @@ class ExtractionReview(QWidget):
         super().__init__()
         self.main_window = main_window
         self.extracted_data = {}
+        self.total_estimated_fee = Decimal("0.00")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -27,11 +31,23 @@ class ExtractionReview(QWidget):
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
         layout.addWidget(title)
 
+        # Metrics Panel: Confidence and Fee auto calculation
+        metrics_layout = QHBoxLayout()
         self.conf_lbl = QLabel("میزان اطمینان استخراج: ۱۰۰٪")
         self.conf_lbl.setFont(QFont(FONT_NAME, 11, QFont.Bold))
         self.conf_lbl.setStyleSheet("color: #38a169;")
-        layout.addWidget(self.conf_lbl)
+        metrics_layout.addWidget(self.conf_lbl)
 
+        metrics_layout.addStretch()
+
+        self.fee_lbl = QLabel("جمع هزینه خدمات: ۰ تومان")
+        self.fee_lbl.setFont(QFont(FONT_NAME, 11, QFont.Bold))
+        self.fee_lbl.setStyleSheet("color: #319795;")
+        metrics_layout.addWidget(self.fee_lbl)
+
+        layout.addLayout(metrics_layout)
+
+        # 1. Patient form metadata card
         meta_card = QFrame()
         meta_card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
         meta_layout = QFormLayout(meta_card)
@@ -49,25 +65,27 @@ class ExtractionReview(QWidget):
 
         layout.addWidget(meta_card)
 
+        # 2. Results table card
         table_card = QFrame()
         table_card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
         tc_layout = QVBoxLayout(table_card)
 
-        table_title = QLabel("جدول نتایج آزمایشگاهی ردیابی شده")
+        table_title = QLabel("جدول نتایج آزمایشگاهی ردیابی شده و تعرفه خدمات")
         table_title.setFont(QFont(FONT_NAME, 12, QFont.Bold))
         tc_layout.addWidget(table_title)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["نام تست", "مقدار غلظت", "واحد سنجش", "وضعیت"])
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["نام تست", "مقدار غلظت", "واحد سنجش", "وضعیت", "تعرفه آزمایش (تومان)"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setStyleSheet("background-color: #11151a; border: none;")
         tc_layout.addWidget(self.table)
 
         layout.addWidget(table_card)
 
+        # Actions Panel
         act_layout = QHBoxLayout()
-        confirm_btn = QPushButton("تایید و ثبت نهایی در پرونده")
+        confirm_btn = QPushButton("تایید و ثبت نهایی در پرونده و صدور فاکتور")
         confirm_btn.setFont(QFont(FONT_NAME, 11, QFont.Bold))
         confirm_btn.setStyleSheet("background-color: #38a169; color: white; padding: 10px 24px; border-radius: 4px;")
         confirm_btn.clicked.connect(self.confirm_and_save)
@@ -99,11 +117,33 @@ class ExtractionReview(QWidget):
 
         tests = data.get("tests", [])
         self.table.setRowCount(len(tests))
-        for idx, t in enumerate(tests):
-            self.table.setItem(idx, 0, QTableWidgetItem(t.get("test_name", "")))
-            self.table.setItem(idx, 1, QTableWidgetItem(t.get("value", "")))
-            self.table.setItem(idx, 2, QTableWidgetItem(t.get("unit", "")))
-            self.table.setItem(idx, 3, QTableWidgetItem(t.get("result_status", "Normal")))
+
+        self.total_estimated_fee = Decimal("0.00")
+
+        with get_db_session() as s:
+            for idx, t in enumerate(tests):
+                t_name = t.get("test_name", "")
+                val_text = t.get("value", "")
+                unit_text = t.get("unit", "")
+                status_text = t.get("result_status", "Normal")
+
+                # Fetch dynamically from database catalog
+                fee = Decimal("0.00")
+                catalog_item = s.query(LabTestCatalog).filter(LabTestCatalog.test_code.like(f"%{t_name}%")).first()
+                if catalog_item:
+                    fee = catalog_item.default_fee or Decimal("0.00")
+                    if not unit_text or unit_text == "---":
+                        unit_text = catalog_item.default_unit or "---"
+
+                self.total_estimated_fee += fee
+
+                self.table.setItem(idx, 0, QTableWidgetItem(t_name))
+                self.table.setItem(idx, 1, QTableWidgetItem(val_text))
+                self.table.setItem(idx, 2, QTableWidgetItem(unit_text))
+                self.table.setItem(idx, 3, QTableWidgetItem(status_text))
+                self.table.setItem(idx, 4, QTableWidgetItem(f"{fee:,.0f}"))
+
+        self.fee_lbl.setText(f"جمع هزینه خدمات: {self.total_estimated_fee:,.0f} تومان")
 
     def confirm_and_save(self):
         self.extracted_data["patient_name"] = self.patient_input.text().strip()
@@ -117,7 +157,8 @@ class ExtractionReview(QWidget):
                 "test_name": self.table.item(r, 0).text() if self.table.item(r, 0) else "",
                 "value": self.table.item(r, 1).text() if self.table.item(r, 1) else "",
                 "unit": self.table.item(r, 2).text() if self.table.item(r, 2) else "",
-                "result_status": self.table.item(r, 3).text() if self.table.item(r, 3) else "Normal"
+                "result_status": self.table.item(r, 3).text() if self.table.item(r, 3) else "Normal",
+                "fee": Decimal(self.table.item(r, 4).text().replace(",", "") if self.table.item(r, 4) else "0")
             })
 
         with get_db_session() as s:
@@ -138,6 +179,7 @@ class ExtractionReview(QWidget):
 
                 report = report_service.register_report(rep_data)
 
+                # Save structured results
                 for tr in self.extracted_data["tests"]:
                     db_tr = LaboratoryTestResult(
                         report_id=report.id,
@@ -149,7 +191,23 @@ class ExtractionReview(QWidget):
                     s.add(db_tr)
                 s.flush()
 
-                QMessageBox.information(self, "موفقیت", f"سند آزمایشگاهی بیمار {report.patient_name} ثبت و در بایگانی آرشیو گردید.")
+                # Automatically Issue Customer Service Charge / Invoice Transaction
+                if self.total_estimated_fee > 0:
+                    accounting_service = AccountingService(s)
+                    accounting_service.post_transaction(
+                        customer_id=cust_id,
+                        transaction_type="Laboratory service charge",
+                        debit_amount=self.total_estimated_fee,
+                        credit_amount=Decimal("0.00"),
+                        description=f"هزینه خدمات آزمایشگاه گزارش شماره {rep_num}",
+                        report_id=report.id
+                    )
+
+                QMessageBox.information(
+                    self, "موفقیت",
+                    f"سند آزمایشگاهی بیمار {report.patient_name} با موفقیت ثبت و هزینه خدمات به مبلغ {self.total_estimated_fee:,.0f} تومان به حساب مشتری منظور گردید."
+                )
+
                 self.main_window.reports_page.load_reports()
                 self.main_window.navigate_to_page(3)
             except Exception as e:

@@ -20,6 +20,8 @@ from app.ui.transactions_page import TransactionsPage
 from app.ui.backup_page import BackupPage
 from app.ui.settings_page import SettingsPage
 from app.ui.about_page import AboutPage
+from app.ui.advanced_search_page import AdvancedSearchPage
+from app.ui.catalog_page import CatalogPage
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -113,10 +115,10 @@ class MainWindow(QMainWindow):
             "افزودن مشتری",              # 2
             "گزارش‌های آزمایشگاهی",       # 3
             "ورود فایل XPS",            # 4
-            "حساب مشتریان",              # 5 -> (TransactionsPage)
-            "دریافت‌ها و پرداخت‌ها",       # 6 -> (TransactionsPage)
-            "گزارش‌های مالی",            # 7 -> Placeholder/Redirect
-            "جستجوی پیشرفته",            # 8 -> Placeholder
+            "حساب مشتریان",              # 5
+            "دریافت‌ها و پرداخت‌ها",       # 6
+            "مدیریت قیمت آزمایشگاهی",     # 7
+            "جستجوی پیشرفته",            # 8
             "پشتیبان‌گیری",              # 9
             "تنظیمات",                  # 10
             "درباره برنامه"              # 11
@@ -151,41 +153,59 @@ class MainWindow(QMainWindow):
         self.reports_page = ReportsPage(self)                 # 3
         self.document_import_page = DocumentImportPage(self)   # 4
         self.transactions_page = TransactionsPage(self)       # 5 & 6
-        self.financial_reports_page = QLabel("گزارش‌های سود، زیان و نمودارهای پیشرفته مالی") # 7
-        self.financial_reports_page.setAlignment(Qt.AlignCenter)
-        self.search_page = QLabel("جستجوی پیشرفته اسناد، بیماران و سوابق مالی") # 8
-        self.search_page.setAlignment(Qt.AlignCenter)
+        self.catalog_page = CatalogPage(self)                 # 7
+        self.search_page = AdvancedSearchPage(self)           # 8
         self.backup_page = BackupPage(self)                   # 9
         self.settings_page = SettingsPage(self)               # 10
         self.about_page = AboutPage(self)                     # 11
 
+        self.customer_profile_page = CustomerProfile(self)     # 12
+        self.customer_statement_page = CustomerStatement(self) # 13
+        self.document_viewer_page = DocumentViewer(self)       # 14
+        self.extraction_review_page = ExtractionReview(self)   # 15
+
+        # Add them as unique widgets to stacked widget container
         self.pages_container.addWidget(self.dashboard_page)       # 0
         self.pages_container.addWidget(self.customers_page)       # 1
         self.pages_container.addWidget(self.customer_form_page)     # 2
         self.pages_container.addWidget(self.reports_page)           # 3
         self.pages_container.addWidget(self.document_import_page)   # 4
         self.pages_container.addWidget(self.transactions_page)     # 5
-        self.pages_container.addWidget(self.transactions_page)     # 6 (Share same transaction page)
-        self.pages_container.addWidget(self.financial_reports_page) # 7
-        self.pages_container.addWidget(self.search_page)            # 8
-        self.pages_container.addWidget(self.backup_page)            # 9
-        self.pages_container.addWidget(self.settings_page)          # 10
-        self.pages_container.addWidget(self.about_page)             # 11
+        self.pages_container.addWidget(self.catalog_page)          # 6
+        self.pages_container.addWidget(self.search_page)            # 7
+        self.pages_container.addWidget(self.backup_page)            # 8
+        self.pages_container.addWidget(self.settings_page)          # 9
+        self.pages_container.addWidget(self.about_page)             # 10
+        self.pages_container.addWidget(self.customer_profile_page)  # 11
+        self.pages_container.addWidget(self.customer_statement_page)# 12
+        self.pages_container.addWidget(self.document_viewer_page)  # 13
+        self.pages_container.addWidget(self.extraction_review_page)# 14
 
-        # Instantiate Extra Tabs (Not in right side navigation menu directly)
-        self.customer_profile_page = CustomerProfile(self)     # 12
-        self.customer_statement_page = CustomerStatement(self) # 13
-        self.document_viewer_page = DocumentViewer(self)       # 14
-        self.extraction_review_page = ExtractionReview(self)   # 15
-
-        self.pages_container.addWidget(self.customer_profile_page)
-        self.pages_container.addWidget(self.customer_statement_page)
-        self.pages_container.addWidget(self.document_viewer_page)
-        self.pages_container.addWidget(self.extraction_review_page)
+        # Clean routing map
+        self.page_mapping = {
+            0: self.dashboard_page,
+            1: self.customers_page,
+            2: self.customer_form_page,
+            3: self.reports_page,
+            4: self.document_import_page,
+            5: self.transactions_page,
+            6: self.transactions_page,
+            7: self.catalog_page,
+            8: self.search_page,
+            9: self.backup_page,
+            10: self.settings_page,
+            11: self.about_page,
+            12: self.customer_profile_page,
+            13: self.customer_statement_page,
+            14: self.document_viewer_page,
+            15: self.extraction_review_page
+        }
 
     def on_nav_change(self, index: int):
-        self.pages_container.setCurrentIndex(index)
-        # Handle dynamic refreshes on tab activations
+        target_widget = self.page_mapping.get(index, self.dashboard_page)
+        self.pages_container.setCurrentWidget(target_widget)
+
+        # Trigger page data updates
         if index == 1:
             self.customers_page.load_customers()
         elif index == 0:
@@ -193,6 +213,8 @@ class MainWindow(QMainWindow):
             self.dashboard_page.populate_recent_transactions()
         elif index == 3:
             self.reports_page.load_reports()
+        elif index == 7:
+            self.catalog_page.load_catalog()
         elif index in [5, 6]:
             self.transactions_page.load_customers_combo()
             self.transactions_page.load_transactions()
@@ -200,12 +222,16 @@ class MainWindow(QMainWindow):
     def navigate_to_page(self, index: int):
         if index < len(self.menu_items):
             self.nav_list.setCurrentRow(index)
-        self.pages_container.setCurrentIndex(index)
+
+        target_widget = self.page_mapping.get(index, self.dashboard_page)
+        self.pages_container.setCurrentWidget(target_widget)
 
         if index == 1:
             self.customers_page.load_customers()
         elif index == 3:
             self.reports_page.load_reports()
+        elif index == 7:
+            self.catalog_page.load_catalog()
         elif index == 12:
             self.customer_profile_page.load_profile_data()
         elif index == 13:

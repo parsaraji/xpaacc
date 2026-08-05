@@ -9,3 +9,4 @@ from app.models.extraction_template import ExtractionTemplate, ExtractionField
 from app.models.audit_log import AuditLog
 from app.models.backup_record import BackupRecord
 from app.models.app_setting import AppSetting
+from app.models.lab_test_catalog import LabTestCatalog
