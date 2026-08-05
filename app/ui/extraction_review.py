@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
-    QPushButton, QLineEdit, QHeaderView, QMessageBox, QFrame, QFormLayout
+    QPushButton, QLineEdit, QHeaderView, QMessageBox, QFrame, QFormLayout, QComboBox
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -12,6 +12,7 @@ from app.services.accounting_service import AccountingService
 from app.models.laboratory_report import LaboratoryReport
 from app.models.laboratory_test import LaboratoryTestResult
 from app.models.lab_test_catalog import LabTestCatalog
+from app.models.customer import Customer
 from app.document_processing.confidence import ConfidenceCalculator
 from decimal import Decimal
 import os
@@ -31,7 +32,7 @@ class ExtractionReview(QWidget):
         title.setFont(QFont(FONT_NAME, 14, QFont.Bold))
         layout.addWidget(title)
 
-        # Metrics Panel: Confidence and Fee auto calculation
+        # Metrics Panel
         metrics_layout = QHBoxLayout()
         self.conf_lbl = QLabel("میزان اطمینان استخراج: ۱۰۰٪")
         self.conf_lbl.setFont(QFont(FONT_NAME, 11, QFont.Bold))
@@ -42,23 +43,28 @@ class ExtractionReview(QWidget):
 
         self.fee_lbl = QLabel("جمع هزینه خدمات: ۰ تومان")
         self.fee_lbl.setFont(QFont(FONT_NAME, 11, QFont.Bold))
-        self.fee_lbl.setStyleSheet("color: #319795;")
+        self.fee_lbl.setStyleSheet("color: #0284c7;")
         metrics_layout.addWidget(self.fee_lbl)
 
         layout.addLayout(metrics_layout)
 
         # 1. Patient form metadata card
         meta_card = QFrame()
-        meta_card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
+        meta_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;")
         meta_layout = QFormLayout(meta_card)
         meta_layout.setContentsMargins(15, 15, 15, 15)
+
+        # Customer Assignment Dropdown
+        self.customer_combo = QComboBox()
+        self.load_customers_dropdown()
 
         self.patient_input = QLineEdit()
         self.sample_id_input = QLineEdit()
         self.sample_type_input = QLineEdit()
         self.test_date_input = QLineEdit()
 
-        meta_layout.addRow("نام بیمار:", self.patient_input)
+        meta_layout.addRow("اختصاص به مشتری خاص *:", self.customer_combo)
+        meta_layout.addRow("نام بیمار (مراجعه‌کننده):", self.patient_input)
         meta_layout.addRow("شناسه نمونه:", self.sample_id_input)
         meta_layout.addRow("نوع نمونه:", self.sample_type_input)
         meta_layout.addRow("تاریخ آزمایش:", self.test_date_input)
@@ -67,7 +73,7 @@ class ExtractionReview(QWidget):
 
         # 2. Results table card
         table_card = QFrame()
-        table_card.setStyleSheet("background-color: #1a202c; border: 1px solid #2d3748; border-radius: 8px;")
+        table_card.setStyleSheet("background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;")
         tc_layout = QVBoxLayout(table_card)
 
         table_title = QLabel("جدول نتایج آزمایشگاهی ردیابی شده و تعرفه خدمات")
@@ -78,7 +84,7 @@ class ExtractionReview(QWidget):
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["نام تست", "مقدار غلظت", "واحد سنجش", "وضعیت", "تعرفه آزمایش (تومان)"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setStyleSheet("background-color: #11151a; border: none;")
+        self.table.setStyleSheet("background-color: #ffffff; border: none;")
         tc_layout.addWidget(self.table)
 
         layout.addWidget(table_card)
@@ -87,7 +93,7 @@ class ExtractionReview(QWidget):
         act_layout = QHBoxLayout()
         confirm_btn = QPushButton("تایید و ثبت نهایی در پرونده و صدور فاکتور")
         confirm_btn.setFont(QFont(FONT_NAME, 11, QFont.Bold))
-        confirm_btn.setStyleSheet("background-color: #38a169; color: white; padding: 10px 24px; border-radius: 4px;")
+        confirm_btn.setStyleSheet("background-color: #0284c7; color: white; padding: 10px 24px; border-radius: 4px;")
         confirm_btn.clicked.connect(self.confirm_and_save)
         act_layout.addWidget(confirm_btn)
 
@@ -98,8 +104,16 @@ class ExtractionReview(QWidget):
         act_layout.addStretch()
         layout.addLayout(act_layout)
 
+    def load_customers_dropdown(self):
+        self.customer_combo.clear()
+        with get_db_session() as s:
+            custs = s.query(Customer).filter(Customer.is_archived == False).all()
+            for c in custs:
+                self.customer_combo.addItem(f"{c.display_name} ({c.customer_code})", c.id)
+
     def set_review_data(self, data: dict):
         self.extracted_data = data
+        self.load_customers_dropdown()
 
         score = ConfidenceCalculator.calculate_confidence(data)
         self.conf_lbl.setText(f"میزان اطمینان استخراج: {score:.1f}٪")
@@ -127,7 +141,6 @@ class ExtractionReview(QWidget):
                 unit_text = t.get("unit", "")
                 status_text = t.get("result_status", "Normal")
 
-                # Fetch dynamically from database catalog
                 fee = Decimal("0.00")
                 catalog_item = s.query(LabTestCatalog).filter(LabTestCatalog.test_code.like(f"%{t_name}%")).first()
                 if catalog_item:
@@ -146,6 +159,11 @@ class ExtractionReview(QWidget):
         self.fee_lbl.setText(f"جمع هزینه خدمات: {self.total_estimated_fee:,.0f} تومان")
 
     def confirm_and_save(self):
+        cust_id = self.customer_combo.currentData()
+        if not cust_id:
+            QMessageBox.warning(self, "خطا", "لطفاً ابتدا مشتری مورد نظر جهت اختصاص آزمایش را انتخاب فرمایید.")
+            return
+
         self.extracted_data["patient_name"] = self.patient_input.text().strip()
         self.extracted_data["sample_id"] = self.sample_id_input.text().strip()
         self.extracted_data["sample_type"] = self.sample_type_input.text().strip()
@@ -163,7 +181,6 @@ class ExtractionReview(QWidget):
 
         with get_db_session() as s:
             try:
-                cust_id = 1
                 report_service = ReportService(s)
                 rep_num = f"REP-{(s.query(LaboratoryReport).count() + 9001):04d}"
 
@@ -191,7 +208,7 @@ class ExtractionReview(QWidget):
                     s.add(db_tr)
                 s.flush()
 
-                # Automatically Issue Customer Service Charge / Invoice Transaction
+                # Issue invoice charge on customer
                 if self.total_estimated_fee > 0:
                     accounting_service = AccountingService(s)
                     accounting_service.post_transaction(
@@ -205,7 +222,7 @@ class ExtractionReview(QWidget):
 
                 QMessageBox.information(
                     self, "موفقیت",
-                    f"سند آزمایشگاهی بیمار {report.patient_name} با موفقیت ثبت و هزینه خدمات به مبلغ {self.total_estimated_fee:,.0f} تومان به حساب مشتری منظور گردید."
+                    f"سند آزمایشگاهی بیمار {report.patient_name} با موفقیت ثبت و به حساب مشتری انتخابی به مبلغ {self.total_estimated_fee:,.0f} تومان منظور گردید."
                 )
 
                 self.main_window.reports_page.load_reports()

@@ -32,19 +32,19 @@ class MainWindow(QMainWindow):
         # Apply Central Application Font & RTL Styling
         self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
 
-        # Global Premium Stylesheet
+        # Global Microsoft Premium Clean Light Stylesheet
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #1a1e24; /* Deep carbon blue background */
+                background-color: #f3f4f6; /* Premium Ivory/Light Gray background */
             }
             QWidget {
-                color: #e3e8f0;
+                color: #1f2937; /* Clean Charcoal/Dark Gray Text */
                 font-family: 'Vazirmatn', 'Segoe UI', Tahoma;
                 font-size: 13px;
             }
             QFrame#Sidebar {
-                background-color: #11151a;
-                border-right: 1px solid #232d38;
+                background-color: #ffffff; /* Microsoft Clean Light sidebar */
+                border-left: 1px solid #e5e7eb;
             }
             QListWidget#NavList {
                 background-color: transparent;
@@ -56,27 +56,50 @@ class MainWindow(QMainWindow):
                 border-radius: 6px;
                 margin-bottom: 4px;
                 background-color: transparent;
-                color: #a0aec0;
+                color: #4b5563;
             }
             QListWidget#NavList::item:hover {
-                background-color: #1e2630;
-                color: #319795; /* Teal hover */
+                background-color: #f3f4f6;
+                color: #0284c7; /* Microsoft Blue/Teal */
             }
             QListWidget#NavList::item:selected {
-                background-color: #319795; /* Teal active item */
+                background-color: #0284c7; /* Blue active item */
                 color: #ffffff;
                 font-weight: bold;
             }
-            QPushButton#QuickBtn {
-                background-color: #234e52;
-                border: 1px solid #319795;
+            QPushButton {
+                background-color: #0284c7;
                 color: #ffffff;
-                border-radius: 6px;
-                padding: 10px;
+                border: 1px solid #0284c7;
+                border-radius: 4px;
+                padding: 6px 12px;
                 font-weight: bold;
             }
-            QPushButton#QuickBtn:hover {
-                background-color: #2c7a7b;
+            QPushButton:hover {
+                background-color: #0369a1;
+            }
+            QTableWidget {
+                background-color: #ffffff;
+                gridline-color: #e5e7eb;
+                border: 1px solid #e5e7eb;
+                color: #1f2937;
+            }
+            QHeaderView::section {
+                background-color: #f9fafb;
+                color: #374151;
+                padding: 8px;
+                font-weight: bold;
+                border: 1px solid #e5e7eb;
+            }
+            QLineEdit, QComboBox, QTextEdit {
+                background-color: #ffffff;
+                border: 1px solid #d1d5db;
+                border-radius: 4px;
+                padding: 6px;
+                color: #1f2937;
+            }
+            QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
+                border: 1px solid #0284c7;
             }
         """)
 
@@ -102,7 +125,7 @@ class MainWindow(QMainWindow):
         brand_label.setFont(QFont(FONT_NAME, 13, QFont.Bold))
         brand_label.setWordWrap(True)
         brand_label.setAlignment(Qt.AlignCenter)
-        brand_label.setStyleSheet("color: #319795; margin-bottom: 20px; line-height: 1.4;")
+        brand_label.setStyleSheet("color: #0284c7; margin-bottom: 20px; line-height: 1.4;")
         sidebar_layout.addWidget(brand_label)
 
         # Navigation Menu List
@@ -136,7 +159,7 @@ class MainWindow(QMainWindow):
         # Footer branding
         footer_brand = QLabel("طراحی شده برای ویندوز")
         footer_brand.setFont(QFont(FONT_NAME, 10))
-        footer_brand.setStyleSheet("color: #4a5568;")
+        footer_brand.setStyleSheet("color: #9ca3af;")
         footer_brand.setAlignment(Qt.AlignCenter)
         sidebar_layout.addWidget(footer_brand)
 
