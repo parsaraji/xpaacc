@@ -1,0 +1,16 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from app.config import DATABASE_URL
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+def init_db():
+    from app.models import (
+        Customer, CustomerAddress, CustomerTag, LaboratoryReport,
+        LaboratoryReportPage, LaboratoryTestResult, FinancialTransaction,
+        Invoice, InvoiceItem, AppSetting, AuditLog, BackupRecord, Attachment,
+        ExtractionTemplate, ExtractionField
+    )
+    Base.metadata.create_all(bind=engine)
